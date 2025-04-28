@@ -91,7 +91,7 @@ void CSimpleClient::funcReceive(const LPVOID lpContext)
 {
 	CSimpleClient* pSimpleClient = reinterpret_cast<CSimpleClient*>(lpContext);
 
-	while (pSimpleClient->IsAlive())
+	while (pSimpleClient->IsAliveThread())
 	{
 		if (!pSimpleClient->Receive())
 			break;
@@ -151,7 +151,6 @@ void CSimpleClient::StartThread()
 	m_bEndThread = FALSE;
 	m_bAliveThread = TRUE;
 	t1 = std::thread(funcReceive, this);
-	//t1.join();
 }
 
 void CSimpleClient::StopThread()
@@ -187,7 +186,7 @@ SOCKET& CSimpleClient::GetSocket()
 	return clientSocket;
 }
 
-BOOL CSimpleClient::IsAlive()
+BOOL CSimpleClient::IsAliveThread()
 {
 	return m_bAliveThread;
 }
@@ -212,7 +211,6 @@ void CSimpleClient::StringToChar(CString str, char* szStr)  // char* returned mu
 void CSimpleClient::StringToTChar(CString str, TCHAR* tszStr) // TCHAR* returned must be deleted... 
 {
 	int nLen = str.GetLength() + 1;
-	//tszStr = new TCHAR[nLen];
 	memset(tszStr, 0x00, nLen * sizeof(TCHAR));
 	_tcscpy(tszStr, str);
 }

@@ -36,7 +36,7 @@ public:
 	BOOL Send(CString sSend);
 	void ClearReadBuffer();
 	SOCKET& GetSocket();
-	BOOL IsAlive();
+	BOOL IsAliveThread();
 	void StopThread();
 	void EndThread();
 	BOOL Receive();
