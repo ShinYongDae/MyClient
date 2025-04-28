@@ -1,0 +1,11 @@
+Debug/
+ipch/
+x64/
+MyClient.sdf
+MyClient.VC.db
+MyClient/Debug/
+MyClient/x64/
+.vs/
+MyClient/MyClient.aps
+
+
