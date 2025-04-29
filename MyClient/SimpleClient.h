@@ -15,7 +15,7 @@ class CSimpleClient : public CWnd
 
 	CWnd* m_pParent;
 	//SOCKET clientSocket;
-	BOOL m_bAliveThread, m_bEndThread;
+	BOOL m_bAliveThread, m_bEndThreadState;
 	std::thread t1;
 
 	void StringToChar(CString str, char* szStr);
@@ -30,7 +30,6 @@ public:
 	HWND m_hParentWnd;
 	char* m_pReadBuffer;
 	SOCKET clientSocket;
-	HANDLE m_hComm;
 
 	static void funcReceive(const LPVOID lpContext);
 	BOOL Send(CString sSend);

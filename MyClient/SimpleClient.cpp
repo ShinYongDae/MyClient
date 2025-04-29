@@ -44,9 +44,12 @@ CSimpleClient::CSimpleClient(CString sServerIp, int nPort, CWnd* pParent/*=NULL*
 	clientAddr.sin_port = htons(nPort);
 	clientAddr.sin_addr.S_un.S_addr = inet_addr(cServerIp);
 	recval = connect(clientSocket, (SOCKADDR *)&clientAddr, sizeof(clientAddr));
-	if (recval == SOCKET_ERROR)
-		AfxMessageBox(_T("connect() Error"));
 	delete cServerIp;
+	if (recval == SOCKET_ERROR)
+	{
+		AfxMessageBox(_T("connect() Error"));
+		return;
+	}
 	
 	StartThread();
 }
@@ -77,13 +80,13 @@ BOOL CSimpleClient::Send(CString sSend)
 	int nLen = sSend.GetLength() + 1; // for '\0'
 	char* cSend = new char[nLen];
 	StringToChar(sSend, cSend);
-	int recval = send(clientSocket, cSend, strlen(cSend), 0);
-	if (recval == SOCKET_ERROR)
+	int retval = send(clientSocket, cSend, strlen(cSend), 0);
+	delete cSend;
+	if (retval == SOCKET_ERROR)
 	{
 		AfxMessageBox(_T("send() Error"));
 		return FALSE;
 	}
-	delete cSend;
 	return TRUE;
 }
 
@@ -148,7 +151,7 @@ BOOL CSimpleClient::Receive()
 
 void CSimpleClient::StartThread()
 {
-	m_bEndThread = FALSE;
+	m_bEndThreadState = FALSE;
 	m_bAliveThread = TRUE;
 	t1 = std::thread(funcReceive, this);
 }
@@ -160,7 +163,7 @@ void CSimpleClient::StopThread()
 	const DWORD dwTimeOut = 1000*60*3; // 3 Minute
 	DWORD dwStartTick = GetTickCount();
 	Sleep(30);
-	while (!m_bEndThread)
+	while (!m_bEndThreadState)
 	{
 		if (GetTickCount() >= (dwStartTick + dwTimeOut))
 		{
@@ -178,7 +181,7 @@ void CSimpleClient::StopThread()
 
 void CSimpleClient::EndThread()
 {
-	m_bEndThread = TRUE;
+	m_bEndThreadState = TRUE;
 }
 
 SOCKET& CSimpleClient::GetSocket()
@@ -189,11 +192,6 @@ SOCKET& CSimpleClient::GetSocket()
 BOOL CSimpleClient::IsAliveThread()
 {
 	return m_bAliveThread;
-}
-
-void EndThread()
-{
-
 }
 
 void CSimpleClient::ClearReadBuffer()
