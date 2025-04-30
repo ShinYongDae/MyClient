@@ -15,7 +15,7 @@ CSimpleClient::CSimpleClient(CString sServerIp, int nPort, CWnd* pParent/*=NULL*
 	if(pParent)
 		m_hParentWnd = pParent->GetSafeHwnd();
 
-	m_pReadBuffer = new char[BUFSIZE]; // 1mb
+	m_pReadBuffer = new char[BUFSIZE];
 
 	//윈도우 소켓(원속) 초기화
 	WSADATA wsaData;
@@ -56,14 +56,14 @@ CSimpleClient::CSimpleClient(CString sServerIp, int nPort, CWnd* pParent/*=NULL*
 
 CSimpleClient::~CSimpleClient()
 {
+	//소켓 종료
+	closesocket(clientSocket);
+
 	StopThread();
 	Sleep(30);
 	t1.join();
 
-	//소켓 종료
-	closesocket(clientSocket);
 	WSACleanup();
-
 	delete m_pReadBuffer;
 }
 
