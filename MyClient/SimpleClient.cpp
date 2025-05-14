@@ -50,7 +50,13 @@ CSimpleClient::CSimpleClient(CString sServerIp, int nPort, CWnd* pParent/*=NULL*
 		AfxMessageBox(_T("connect() Error"));
 		return;
 	}
-	
+
+	if (!Create(NULL, _T("Client"), WS_CHILD, CRect(0, 0, 0, 0), m_pParent, (UINT)this))
+	{
+		AfxMessageBox(_T("CSimpleClient::Create() Failed!!!"));
+		return;
+	}
+
 	StartThread();
 }
 
@@ -90,7 +96,7 @@ BOOL CSimpleClient::Send(CString sSend)
 	return TRUE;
 }
 
-void CSimpleClient::funcReceive(const LPVOID lpContext)
+void CSimpleClient::thrdReceive(const LPVOID lpContext)
 {
 	CSimpleClient* pSimpleClient = reinterpret_cast<CSimpleClient*>(lpContext);
 
@@ -153,7 +159,7 @@ void CSimpleClient::StartThread()
 {
 	m_bEndThreadState = FALSE;
 	m_bAliveThread = TRUE;
-	t1 = std::thread(funcReceive, this);
+	t1 = std::thread(thrdReceive, this);
 }
 
 void CSimpleClient::StopThread()
@@ -182,11 +188,6 @@ void CSimpleClient::StopThread()
 void CSimpleClient::EndThread()
 {
 	m_bEndThreadState = TRUE;
-}
-
-SOCKET& CSimpleClient::GetSocket()
-{
-	return clientSocket;
 }
 
 BOOL CSimpleClient::IsAliveThread()

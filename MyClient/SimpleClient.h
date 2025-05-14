@@ -22,6 +22,8 @@ class CSimpleClient : public CWnd
 	void StringToTChar(CString str, TCHAR* tszStr);
 	CString CharToString(char *szStr);
 	void StartThread();
+	void StopThread();
+	void ClearReadBuffer();
 
 public:
 	CSimpleClient(CString sServerIp, int nPort, CWnd* pParent = NULL);
@@ -31,14 +33,13 @@ public:
 	char* m_pReadBuffer;
 	SOCKET clientSocket;
 
-	static void funcReceive(const LPVOID lpContext);
-	BOOL Send(CString sSend);
-	void ClearReadBuffer();
-	SOCKET& GetSocket();
-	BOOL IsAliveThread();
-	void StopThread();
-	void EndThread();
+	static void thrdReceive(const LPVOID lpContext);
 	BOOL Receive();
+	BOOL Send(CString sSend);
+	BOOL IsAliveThread();
+
+protected:
+	void EndThread();
 
 protected:
 	DECLARE_MESSAGE_MAP()
