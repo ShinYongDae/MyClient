@@ -11,9 +11,10 @@ IMPLEMENT_DYNAMIC(CSimpleClient, CWnd)
 
 CSimpleClient::CSimpleClient(CString sServerIp, int nPort, CWnd* pParent/*=NULL*/)
 {
+	m_hParent = NULL;
 	m_pParent = pParent;
 	if(pParent)
-		m_hParentWnd = pParent->GetSafeHwnd();
+		m_hParent = pParent->GetSafeHwnd();
 
 	m_pReadBuffer = new char[BUFSIZE];
 
@@ -51,13 +52,9 @@ CSimpleClient::CSimpleClient(CString sServerIp, int nPort, CWnd* pParent/*=NULL*
 		return;
 	}
 
-	if (!Create(NULL, _T("Client"), WS_CHILD, CRect(0, 0, 0, 0), m_pParent, (UINT)this))
-	{
-		AfxMessageBox(_T("CSimpleClient::Create() Failed!!!"));
-		return;
-	}
+	CreateWndForm(WS_CHILD | WS_OVERLAPPED);
 
-	StartThread();
+	ThreadStart();
 }
 
 CSimpleClient::~CSimpleClient()
@@ -65,7 +62,7 @@ CSimpleClient::~CSimpleClient()
 	//소켓 종료
 	closesocket(clientSocket);
 
-	StopThread();
+	ThreadStop();
 	Sleep(30);
 	t1.join();
 
@@ -80,6 +77,16 @@ END_MESSAGE_MAP()
 
 
 // CSimpleClient 메시지 처리기입니다.
+BOOL CSimpleClient::CreateWndForm(DWORD dwStyle)
+{
+	if (!Create(NULL, _T("SimpleClient"), dwStyle, CRect(0, 0, 0, 0), m_pParent, (UINT)this))
+	{
+		AfxMessageBox(_T("CSimpleClient::Create() Failed!!!"));
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 BOOL CSimpleClient::Send(CString sSend)
 {
@@ -96,20 +103,20 @@ BOOL CSimpleClient::Send(CString sSend)
 	return TRUE;
 }
 
-void CSimpleClient::thrdReceive(const LPVOID lpContext)
+void CSimpleClient::ProcThrd(const LPVOID lpContext)
 {
 	CSimpleClient* pSimpleClient = reinterpret_cast<CSimpleClient*>(lpContext);
 
-	while (pSimpleClient->IsAliveThread())
+	while (pSimpleClient->ThreadIsAlive())
 	{
-		if (!pSimpleClient->Receive())
+		if (!pSimpleClient->ProcReceive())
 			break;
 	}
 
-	pSimpleClient->EndThread();
+	pSimpleClient->ThreadEnd();
 }
 
-BOOL CSimpleClient::Receive()
+BOOL CSimpleClient::ProcReceive()
 {
 	ClearReadBuffer();
 
@@ -144,7 +151,7 @@ BOOL CSimpleClient::Receive()
 			memcpy(readBuffer, buffer, nRecSize);
 			readBuffer[nRecSize] = _T('\0');
 			CString sMsg = CharToString(readBuffer);
-			::SendMessage(m_hParentWnd, WM_CLIENT_RECEIVED, (WPARAM)0, (LPARAM)(LPCTSTR)sMsg);
+			::SendMessage(m_hParent, WM_CLIENT_RECEIVED, (WPARAM)0, (LPARAM)(LPCTSTR)sMsg);
 		}
 		else if (nRecSize == 0)
 		{
@@ -155,21 +162,21 @@ BOOL CSimpleClient::Receive()
 	return TRUE;
 }
 
-void CSimpleClient::StartThread()
+void CSimpleClient::ThreadStart()
 {
-	m_bEndThreadState = FALSE;
-	m_bAliveThread = TRUE;
-	t1 = std::thread(thrdReceive, this);
+	m_bThreadStateEnd = FALSE;
+	m_bThreadAlive = TRUE;
+	t1 = std::thread(ProcThrd, this);
 }
 
-void CSimpleClient::StopThread()
+void CSimpleClient::ThreadStop()
 {
-	m_bAliveThread = FALSE;
+	m_bThreadAlive = FALSE;
 	MSG message;
 	const DWORD dwTimeOut = 1000*60*3; // 3 Minute
 	DWORD dwStartTick = GetTickCount();
 	Sleep(30);
-	while (!m_bEndThreadState)
+	while (!m_bThreadStateEnd)
 	{
 		if (GetTickCount() >= (dwStartTick + dwTimeOut))
 		{
@@ -185,14 +192,14 @@ void CSimpleClient::StopThread()
 	}
 }
 
-void CSimpleClient::EndThread()
+void CSimpleClient::ThreadEnd()
 {
-	m_bEndThreadState = TRUE;
+	m_bThreadStateEnd = TRUE;
 }
 
-BOOL CSimpleClient::IsAliveThread()
+BOOL CSimpleClient::ThreadIsAlive()
 {
-	return m_bAliveThread;
+	return m_bThreadAlive;
 }
 
 void CSimpleClient::ClearReadBuffer()

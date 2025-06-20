@@ -14,32 +14,34 @@ class CSimpleClient : public CWnd
 	DECLARE_DYNAMIC(CSimpleClient)
 
 	CWnd* m_pParent;
+	HWND m_hParent;
 	//SOCKET clientSocket;
-	BOOL m_bAliveThread, m_bEndThreadState;
+	BOOL m_bThreadAlive, m_bThreadStateEnd;
 	std::thread t1;
+
+	BOOL CreateWndForm(DWORD dwStyle);
 
 	void StringToChar(CString str, char* szStr);
 	void StringToTChar(CString str, TCHAR* tszStr);
 	CString CharToString(char *szStr);
-	void StartThread();
-	void StopThread();
+	void ThreadStart();
+	void ThreadStop();
 	void ClearReadBuffer();
 
 public:
 	CSimpleClient(CString sServerIp, int nPort, CWnd* pParent = NULL);
 	virtual ~CSimpleClient();
 	
-	HWND m_hParentWnd;
 	char* m_pReadBuffer;
 	SOCKET clientSocket;
 
-	static void thrdReceive(const LPVOID lpContext);
-	BOOL Receive();
+	static void ProcThrd(const LPVOID lpContext);
+	BOOL ProcReceive();
 	BOOL Send(CString sSend);
-	BOOL IsAliveThread();
+	BOOL ThreadIsAlive();
 
 protected:
-	void EndThread();
+	void ThreadEnd();
 
 protected:
 	DECLARE_MESSAGE_MAP()
